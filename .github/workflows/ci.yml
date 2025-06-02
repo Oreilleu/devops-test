@@ -1,0 +1,74 @@
+name: CI Pipeline
+
+# Déclencher la pipeline sur push et pull request
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job de test
+  test:
+    name: 🧪 Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 📦 Installation des dépendances
+      run: npm ci
+    
+    - name: 🧪 Exécution des tests
+      run: npm test
+    
+    - name: 📊 Tests avec coverage
+      run: npm run test:coverage
+    
+    - name: 📋 Upload du coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/
+
+  # Job de build
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: test  # Attend que les tests passent
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 📦 Installation des dépendances
+      run: npm ci
+    
+    - name: 🔍 Linting
+      run: npm run lint
+    
+    - name: 🏗️ Build du projet
+      run: npm run build
+    
+    - name: 📤 Upload des fichiers buildés
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-files
+        path: dist/
+        retention-days: 7
+    
+    - name: ✅ Succès du build
+      run: echo "🎉 Build terminé avec succès !"
